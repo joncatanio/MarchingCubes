@@ -1,8 +1,3 @@
-/*
-ZJ Wood CPE 471 Lab 3 base code - includes use of glee
-https://github.com/nshkurkin/glee
-*/
-
 #include <iostream>
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -75,68 +70,6 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 	}
 }
 
-static void calcScale(float *scaleX, float *scaleY, float *shiftX, float *shiftY) {
-   float left, right, top, bot;
-
-   if (pixW > pixH) {
-      left = -1 * ((float)pixW / pixH);
-      right = (float)pixW / pixH;
-      top = 1;
-      bot = -1;
-   } else {
-      left = -1;
-      right = 1;
-      top = (float)pixH / pixW;
-      bot = -1 * ((float)pixH / pixW);
-   }
-
-   *scaleX = (pixW - 1) / (right - left);
-   *scaleY = (pixH - 1) / (top - bot);
-   *shiftX = ((pixW - 1) / (right - left)) * (-1 * left);
-   *shiftY = ((pixH - 1) / (top - bot)) * (-1 * bot);
-}
-
-static float p2wX(double xp, float scaleX, float shiftX) {
-   if (RETINA_DISPLAY) {
-      return 2 *((xp - shiftX) / scaleX);
-   } else {
-      return (xp - shiftX) / scaleX;
-   }
-}
-
-static float p2wY(double yp, float scaleY, float shiftY) {
-   double yPx = pixH - yp;
-
-   if (RETINA_DISPLAY) {
-      return 2 * ((yPx - shiftY) / scaleY);
-   } else {
-      return (yPx - shiftY) / scaleY;
-   }
-}
-
-//callback for the mouse when clicked move the triangle when helper functions
-//written
-static void mouse_callback(GLFWwindow *window, int button, int action, int mods)
-{
-	double posX, posY;
-	float newPt[2];
-	if (action == GLFW_PRESS) {
-		glfwGetCursorPos(window, &posX, &posY);	
-		cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
-		//change this to be the points converted to WORLD
-		//THIS IS BROKEN< YOU GET TO FIX IT - yay!
-      float scaleX, scaleY, shiftX, shiftY;
-      calcScale(&scaleX, &scaleY, &shiftX, &shiftY);
-		newPt[0] = p2wX(posX, scaleX, shiftX);
-		newPt[1] = p2wY(posY, scaleY, shiftY);
-		cout << "converted:" << newPt[0] << " " << newPt[1] << endl;
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		//update the vertex array with the updated points
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float)*6, sizeof(float)*2, newPt);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-}
-
 //if the window is resized, capture the new size and reset the viewport
 static void resize_callback(GLFWwindow *window, int in_width, int in_height) {
 	//get the window size - may be different then pixels for retina	
@@ -178,7 +111,7 @@ static void init()
 	// Initialize the GLSL program.
 	prog = make_shared<Program>();
 	prog->setVerbose(true);
-	prog->setShaderNames(RESOURCE_DIR + "color_vert.glsl", RESOURCE_DIR + "color_frag.glsl");
+	prog->setShaderNames(RESOURCE_DIR + "march_vert.glsl", RESOURCE_DIR + "march_frag.glsl");
 	prog->init();
 	prog->addUniform("P");
 	prog->addUniform("MV");
@@ -186,11 +119,6 @@ static void init()
 }
 
 
-/****DRAW
-This is the most important function in your program - this is where you
-will actually issue the commands to draw any geometry you have set up to
-draw
-********/
 static void render()
 {
 	// Get current frame buffer size.
@@ -269,7 +197,7 @@ int main(int argc, char **argv)
 	pixW = 640;
 	pixH = 480;
 	// Create a windowed mode window and its OpenGL context.
-	window = glfwCreateWindow(pixW, pixH, "hello triangle", NULL, NULL);
+	window = glfwCreateWindow(pixW, pixH, "Marching Cubes", NULL, NULL);
 	if(!window) {
 		glfwTerminate();
 		return -1;
@@ -290,8 +218,6 @@ int main(int argc, char **argv)
 	glfwSwapInterval(1);
 	// Set keyboard callback.
 	glfwSetKeyCallback(window, key_callback);
-	//set the mouse call back
-	glfwSetMouseButtonCallback(window, mouse_callback);
 	//set the window resize call back
 	glfwSetFramebufferSizeCallback(window, resize_callback);
 
