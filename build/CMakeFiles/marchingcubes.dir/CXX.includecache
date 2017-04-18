@@ -101,6 +101,8 @@ GL/glew.h
 -
 GLFW/glfw3.h
 -
+cmath
+-
 GLSL.h
 /Users/JonCatanio/Projects/MarchingCubes/src/GLSL.h
 Program.h
