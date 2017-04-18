@@ -462,17 +462,14 @@ static void createTriangles(int i, int j, int k) {
       triangles.push_back(vertlist[triTable[cubeindex][i]].x / LENGTH);
       triangles.push_back(vertlist[triTable[cubeindex][i]].y / HEIGHT);
       triangles.push_back(vertlist[triTable[cubeindex][i]].z / DEPTH);
-      std::cout << "Triangle Point 1: " << triangles[triangles.size() - 3] << " " << triangles[triangles.size() - 2] << " " << triangles[triangles.size() - 1] << std::endl;
 
       triangles.push_back(vertlist[triTable[cubeindex][i+1]].x / LENGTH);
       triangles.push_back(vertlist[triTable[cubeindex][i+1]].y / HEIGHT);
       triangles.push_back(vertlist[triTable[cubeindex][i+1]].z / DEPTH);
-      std::cout << "Triangle Point 2: " << triangles[triangles.size() - 3] << " " << triangles[triangles.size() - 2] << " " << triangles[triangles.size() - 1] << std::endl;
 
       triangles.push_back(vertlist[triTable[cubeindex][i+2]].x / LENGTH);
       triangles.push_back(vertlist[triTable[cubeindex][i+2]].y / HEIGHT);
       triangles.push_back(vertlist[triTable[cubeindex][i+2]].z / DEPTH);
-      std::cout << "Triangle Point 3: " << triangles[triangles.size() - 3] << " " << triangles[triangles.size() - 2] << " " << triangles[triangles.size() - 1] << std::endl;
    }
 }
 
@@ -614,6 +611,8 @@ int main(int argc, char **argv)
 	init();
 	initGeom();
 
+   cout << "Tri sizes: " << triangles.size() / (3*3) << endl;
+   cout << "Render starting" << endl;
 	// Loop until the user closes the window.
 	while(!glfwWindowShouldClose(window)) {
 		// Render scene.
