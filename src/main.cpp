@@ -39,10 +39,12 @@ shared_ptr<Program> prog; //our shader program
    in later programs - so is left explicit for now  */
 GLuint VertexArrayID;
 static GLfloat g_primitive_buffer_data[POINT_ARRAY_SIZE * 5];
+static GLfloat g_normal_buffer_data[POINT_ARRAY_SIZE * 5];
 float volume_data[VALUE_SIZE];
 
 //data necessary to give our triangle data to OGL
 GLuint vertexbuffer; 
+GLuint normalbuffer;
 
 std::vector<GLfloat> triangles;
 std::vector<GLfloat> normals;
@@ -372,6 +374,10 @@ static void initGeom() {
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	//actually memcopy the data - only do this once
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_primitive_buffer_data), g_primitive_buffer_data, GL_DYNAMIC_DRAW);
+
+	glGenBuffers(1, &normalbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_normal_buffer_data), g_normal_buffer_data, GL_DYNAMIC_DRAW);
 }
 
 static float implicitEq(float x, float y, float z) {
@@ -625,15 +631,22 @@ static void init()
 	// Initialize the GLSL program.
 	prog = make_shared<Program>();
 	prog->setVerbose(true);
-	prog->setShaderNames(RESOURCE_DIR + "march_vert.glsl", RESOURCE_DIR + "march_frag.glsl");
+	prog->setShaderNames(RESOURCE_DIR + "phong_vert.glsl", RESOURCE_DIR + "phong_frag.glsl");
 	prog->init();
 	prog->addUniform("P");
 	prog->addUniform("MV");
+   prog->addUniform("MatAmb");
+   prog->addUniform("MatDif");
+   prog->addUniform("MatSpec");
+   prog->addUniform("lightPos");
+   prog->addUniform("shine");
 	prog->addAttribute("vertPos");
+	prog->addAttribute("vertNor");
 
    populateVolumeData();
    drawVolumeData();
    memcpy(g_primitive_buffer_data, triangles.data(), triangles.size() * sizeof(GLfloat));
+   memcpy(g_normal_buffer_data, normals.data(), normals.size() * sizeof(GLfloat));
 }
 
 static void render()
@@ -665,6 +678,11 @@ static void render()
 	//send the matrices to the shaders
 	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
 	glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
+   glUniform3f(prog->getUniform("MatAmb"), 0.0215, 0.1745, 0.0215);
+   glUniform3f(prog->getUniform("MatDif"), 0.07568, 0.61424, 0.07568);
+   glUniform3f(prog->getUniform("MatSpec"), 0.633, 0.727811, 0.633);
+   glUniform1f(prog->getUniform("shine"), 76.8);
+   glUniform3f(prog->getUniform("lightPos"), 1.0, 1.0, 0.0);
 
 	//we need to set up the vertex array
 	glEnableVertexAttribArray(0);
@@ -673,9 +691,14 @@ static void render()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_primitive_buffer_data), g_primitive_buffer_data, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
 
+   glEnableVertexAttribArray(1);
+   glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
+
 	//actually draw from vertex 0, 3 vertices
 	glDrawArrays(GL_TRIANGLES, 0, triangles.size());
 	glDisableVertexAttribArray(0);
+   glDisableVertexAttribArray(1);
 
 	prog->unbind();
 
