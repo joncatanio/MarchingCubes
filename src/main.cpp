@@ -45,6 +45,7 @@ float volume_data[VALUE_SIZE];
 GLuint vertexbuffer; 
 
 std::vector<GLfloat> triangles;
+std::vector<GLfloat> normals;
 
 int edgeTable[256]={
 0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -406,19 +407,95 @@ static glm::vec3 midpoint(float i1, float j1, float k1, float i2, float j2, floa
 static void createTriangles(int i, int j, int k) {
    float isolevel = 0;
    glm::vec3 vertlist[12];
+    glm::vec3 normlist[12];
 
-   // Front face
+   // "down side
    float implicitVal0 = volume_data[IJK(i,j,k+1)];
    float implicitVal1 = volume_data[IJK(i+1,j,k+1)];
    float implicitVal2 = volume_data[IJK(i+1,j,k)];
    float implicitVal3 = volume_data[IJK(i,j,k)];
-   // Back face
+   // "upper side"
    float implicitVal4 = volume_data[IJK(i,j+1,k+1)];
    float implicitVal5 = volume_data[IJK(i+1,j+1,k+1)];
    float implicitVal6 = volume_data[IJK(i+1,j+1,k)];
    float implicitVal7 = volume_data[IJK(i,j+1,k)];
 
-   int cubeindex = 0;
+    int im1 = i-1;
+    int ip1 = i+1;
+    int ip2 = i+2;
+    int jm1 = j-1;
+    int jp1 = j+1;
+    int jp2 = j+2;
+    int km1 = k-1;
+    int kp1 = k+1;
+    int kp2 = k+2;
+
+    if(im1 < 0)
+        im1 = 0;
+    if(ip1 > LENGTH - 1)
+        ip1 = LENGTH - 1;
+    if(ip2 > LENGTH - 1)
+        ip2 = LENGTH - 1;
+
+    if(jm1 < 0)
+        jm1 = 0;
+    if(jp1 > HEIGHT - 1)
+        jp1 = HEIGHT - 1;
+    if(jp2 > HEIGHT - 1)
+        jp2 = HEIGHT - 1;
+
+    if(km1 < 0)
+        km1 = 0;
+    if(kp1 > DEPTH - 1)
+        kp1 = DEPTH - 1;
+    if(kp2 > DEPTH - 1)
+        kp2 = DEPTH - 1;
+
+
+    // "down side"
+    glm::vec3 normal0 = glm::vec3(volume_data[IJK(ip1,j,kp1)] - volume_data[IJK(im1,j,kp1)],
+                                  volume_data[IJK(i,jp1,kp1)] - volume_data[IJK(i,jm1,kp1)],
+                                  volume_data[IJK(i,j,kp2)] - volume_data[IJK(i,j,k)]);
+
+    glm::vec3 normal1 = glm::vec3(volume_data[IJK(ip2,j,kp1)] - volume_data[IJK(i,j,kp1)],
+                                  volume_data[IJK(ip1,jp1,kp1)] - volume_data[IJK(ip1,jm1,kp1)],
+                                  volume_data[IJK(ip1,j,kp2)] - volume_data[IJK(ip1,j,k)]);
+
+    glm::vec3 normal2 = glm::vec3(volume_data[IJK(ip2,j,k)] - volume_data[IJK(i,j,k)],
+                                  volume_data[IJK(ip1,jp1,k)] - volume_data[IJK(ip1,jm1,k)],
+                                  volume_data[IJK(ip1,j,kp1)] - volume_data[IJK(ip1,j,kp1)]);
+
+    glm::vec3 normal3 = glm::vec3(volume_data[IJK(ip1,j,k)] - volume_data[IJK(im1,j,k)],
+                                  volume_data[IJK(i,jp1,k)] - volume_data[IJK(i,jm1,k)],
+                                  volume_data[IJK(i,j,kp1)] - volume_data[IJK(i,j,km1)]);
+
+    // "upper side"
+    glm::vec3 normal4 = glm::vec3(volume_data[IJK(ip1,jp1,kp1)] - volume_data[IJK(im1,jp1,kp1)],
+                                  volume_data[IJK(i,jp2,kp1)] - volume_data[IJK(i,j,kp1)],
+                                  volume_data[IJK(i,jp1,kp2)] - volume_data[IJK(i,jp1,k)]);
+
+    glm::vec3 normal5 = glm::vec3(volume_data[IJK(ip2,jp1,kp1)] - volume_data[IJK(i,jp1,kp1)],
+                                  volume_data[IJK(ip1,jp2,kp1)] - volume_data[IJK(ip1,j,kp1)],
+                                  volume_data[IJK(ip1,jp1,kp2)] - volume_data[IJK(ip1,jp1,k)]);
+
+    glm::vec3 normal6 = glm::vec3(volume_data[IJK(ip2,jp1,k)] - volume_data[IJK(i,jp1,k)],
+                                  volume_data[IJK(ip1,jp2,k)] - volume_data[IJK(ip1,j,k)],
+                                  volume_data[IJK(ip1,jp1,kp1)] - volume_data[IJK(ip1,jp1,kp1)]);
+
+    glm::vec3 normal7 = glm::vec3(volume_data[IJK(ip1,jp1,k)] - volume_data[IJK(im1,jp1,k)],
+                                  volume_data[IJK(i,jp2,k)] - volume_data[IJK(i,j,k)],
+                                  volume_data[IJK(i,jp1,kp1)] - volume_data[IJK(i,jp1,km1)]);
+
+    normal0 = glm::normalize(normal0);
+    normal1 = glm::normalize(normal1);
+    normal2 = glm::normalize(normal2);
+    normal3 = glm::normalize(normal3);
+    normal4 = glm::normalize(normal4);
+    normal5 = glm::normalize(normal5);
+    normal6 = glm::normalize(normal6);
+    normal7 = glm::normalize(normal7);
+
+    int cubeindex = 0;
    if (implicitVal0 < isolevel) cubeindex |= 1;
    if (implicitVal1 < isolevel) cubeindex |= 2;
    if (implicitVal2 < isolevel) cubeindex |= 4;
@@ -433,32 +510,70 @@ static void createTriangles(int i, int j, int k) {
       return;
 
    /* Find the vertices where the surface intersects the cube */
-   if (edgeTable[cubeindex] & 1)
-      vertlist[0] = midpoint(i,j,k+1,i+1,j,k+1);
-   if (edgeTable[cubeindex] & 2)
-      vertlist[1] = midpoint(i+1,j,k+1,i+1,j,k);
-   if (edgeTable[cubeindex] & 4)
-      vertlist[2] = midpoint(i+1,j,k,i,j,k);
-   if (edgeTable[cubeindex] & 8)
-      vertlist[3] = midpoint(i,j,k,i,j,k+1);
-   if (edgeTable[cubeindex] & 16)
-      vertlist[4] = midpoint(i,j+1,k+1,i+1,j+1,k+1);
-   if (edgeTable[cubeindex] & 32)
-      vertlist[5] = midpoint(i+1,j+1,k+1,i+1,j+1,k);
-   if (edgeTable[cubeindex] & 64)
-      vertlist[6] = midpoint(i+1,j+1,k,i,j+1,k);
-   if (edgeTable[cubeindex] & 128)
-      vertlist[7] = midpoint(i,j+1,k,i,j+1,k+1);
-   if (edgeTable[cubeindex] & 256)
-      vertlist[8] = midpoint(i,j,k+1,i,j+1,k+1);
-   if (edgeTable[cubeindex] & 512)
-      vertlist[9] = midpoint(i+1,j,k+1,i+1,j+1,k+1);
-   if (edgeTable[cubeindex] & 1024)
-      vertlist[10] = midpoint(i+1,j,k,i+1,j+1,k);
-   if (edgeTable[cubeindex] & 2048)
-      vertlist[11] = midpoint(i,j,k,i,j+1,k);
+   if (edgeTable[cubeindex] & 1) {
+       // 0 & 1
+       vertlist[0] = midpoint(i, j, k + 1, i + 1, j, k + 1);
+       normlist[0] = glm::normalize(normal0 + normal1);
+
+   }
+   if (edgeTable[cubeindex] & 2) {
+       // 1 & 2
+       vertlist[1] = midpoint(i + 1, j, k + 1, i + 1, j, k);
+       normlist[1] = glm::normalize(normal1 + normal2);
+   }
+   if (edgeTable[cubeindex] & 4) {
+       // 2 & 3
+       vertlist[2] = midpoint(i + 1, j, k, i, j, k);
+       normlist[2] = glm::normalize(normal2 + normal3);
+   }
+   if (edgeTable[cubeindex] & 8) {
+       // 3 & 0
+       vertlist[3] = midpoint(i, j, k, i, j, k + 1);
+       normlist[3] = glm::normalize(normal3 + normal0);
+   }
+   if (edgeTable[cubeindex] & 16) {
+       // 4 & 5
+       vertlist[4] = midpoint(i, j + 1, k + 1, i + 1, j + 1, k + 1);
+       normlist[4] = glm::normalize(normal4 + normal5);
+   }
+   if (edgeTable[cubeindex] & 32) {
+       // 5 & 6
+       vertlist[5] = midpoint(i + 1, j + 1, k + 1, i + 1, j + 1, k);
+       normlist[5] = glm::normalize(normal5 + normal6);
+   }
+   if (edgeTable[cubeindex] & 64) {
+       // 6 & 7
+       vertlist[6] = midpoint(i + 1, j + 1, k, i, j + 1, k);
+       normlist[6] = glm::normalize(normal6 + normal7);
+   }
+   if (edgeTable[cubeindex] & 128) {
+       // 7 & 4
+       vertlist[7] = midpoint(i, j + 1, k, i, j + 1, k + 1);
+       normlist[7] = glm::normalize(normal7 + normal4);
+   }
+   if (edgeTable[cubeindex] & 256) {
+       // 0 & 4
+       vertlist[8] = midpoint(i, j, k + 1, i, j + 1, k + 1);
+       normlist[8] = glm::normalize(normal0 + normal4);
+   }
+   if (edgeTable[cubeindex] & 512) {
+       // 1 & 5
+       vertlist[9] = midpoint(i + 1, j, k + 1, i + 1, j + 1, k + 1);
+       normlist[9] = glm::normalize(normal1 + normal5);
+   }
+   if (edgeTable[cubeindex] & 1024) {
+       // 2 & 6
+       vertlist[10] = midpoint(i + 1, j, k, i + 1, j + 1, k);
+       normlist[10] = glm::normalize(normal2 + normal6);
+   }
+   if (edgeTable[cubeindex] & 2048) {
+       // 3 & 7
+       vertlist[11] = midpoint(i, j, k, i, j + 1, k);
+       normlist[11] = glm::normalize(normal3 + normal7);
+   }
 
    for (int i=0; triTable[cubeindex][i] != -1; i+=3) {
+       // VERTICES
       triangles.push_back(vertlist[triTable[cubeindex][i]].x / LENGTH);
       triangles.push_back(vertlist[triTable[cubeindex][i]].y / HEIGHT);
       triangles.push_back(vertlist[triTable[cubeindex][i]].z / DEPTH);
@@ -470,6 +585,20 @@ static void createTriangles(int i, int j, int k) {
       triangles.push_back(vertlist[triTable[cubeindex][i+2]].x / LENGTH);
       triangles.push_back(vertlist[triTable[cubeindex][i+2]].y / HEIGHT);
       triangles.push_back(vertlist[triTable[cubeindex][i+2]].z / DEPTH);
+
+       // NORMALS
+       normals.push_back(normlist[triTable[cubeindex][i]].x);
+       normals.push_back(normlist[triTable[cubeindex][i]].y);
+       normals.push_back(normlist[triTable[cubeindex][i]].z);
+
+       normals.push_back(normlist[triTable[cubeindex][i+1]].x);
+       normals.push_back(normlist[triTable[cubeindex][i+1]].y);
+       normals.push_back(normlist[triTable[cubeindex][i+1]].z);
+
+       normals.push_back(normlist[triTable[cubeindex][i+2]].x);
+       normals.push_back(normlist[triTable[cubeindex][i+2]].y);
+       normals.push_back(normlist[triTable[cubeindex][i+2]].z);
+
    }
 }
 
