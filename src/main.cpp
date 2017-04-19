@@ -381,7 +381,7 @@ static void initGeom() {
 }
 
 static float implicitEq(float x, float y, float z) {
-   return pow(x - (LENGTH / 2), 2) + pow(y - (HEIGHT / 2), 2) + pow(z - (DEPTH / 2), 2) - pow(50, 2);
+   return pow(x - (LENGTH / 2), 2) + pow(y - (HEIGHT / 2), 2) + pow(z - (DEPTH / 2), 2) - pow(59, 2);
 }
 
 static void populateVolumeData() {
@@ -580,17 +580,17 @@ static void createTriangles(int i, int j, int k) {
 
    for (int i=0; triTable[cubeindex][i] != -1; i+=3) {
        // VERTICES
-      triangles.push_back(vertlist[triTable[cubeindex][i]].x / LENGTH);
-      triangles.push_back(vertlist[triTable[cubeindex][i]].y / HEIGHT);
-      triangles.push_back(vertlist[triTable[cubeindex][i]].z / DEPTH);
+      triangles.push_back(vertlist[triTable[cubeindex][i]].x / (LENGTH / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i]].y / (HEIGHT / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i]].z / (DEPTH / 2.0));
 
-      triangles.push_back(vertlist[triTable[cubeindex][i+1]].x / LENGTH);
-      triangles.push_back(vertlist[triTable[cubeindex][i+1]].y / HEIGHT);
-      triangles.push_back(vertlist[triTable[cubeindex][i+1]].z / DEPTH);
+      triangles.push_back(vertlist[triTable[cubeindex][i+1]].x / (LENGTH / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+1]].y / (HEIGHT / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+1]].z / (DEPTH / 2.0));
 
-      triangles.push_back(vertlist[triTable[cubeindex][i+2]].x / LENGTH);
-      triangles.push_back(vertlist[triTable[cubeindex][i+2]].y / HEIGHT);
-      triangles.push_back(vertlist[triTable[cubeindex][i+2]].z / DEPTH);
+      triangles.push_back(vertlist[triTable[cubeindex][i+2]].x / (LENGTH / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+2]].y / (HEIGHT / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+2]].z / (DEPTH / 2.0));
 
        // NORMALS
        normals.push_back(normlist[triTable[cubeindex][i]].x);
@@ -682,7 +682,7 @@ static void render()
    glUniform3f(prog->getUniform("MatDif"), 0.07568, 0.61424, 0.07568);
    glUniform3f(prog->getUniform("MatSpec"), 0.633, 0.727811, 0.633);
    glUniform1f(prog->getUniform("shine"), 76.8);
-   glUniform3f(prog->getUniform("lightPos"), 1.0, 1.0, 0.0);
+   glUniform3f(prog->getUniform("lightPos"), 0.5, 0.0, 1.0);
 
 	//we need to set up the vertex array
 	glEnableVertexAttribArray(0);
