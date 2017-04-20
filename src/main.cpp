@@ -41,6 +41,7 @@ GLuint VertexArrayID;
 static GLfloat g_primitive_buffer_data[POINT_ARRAY_SIZE * 5];
 static GLfloat g_normal_buffer_data[POINT_ARRAY_SIZE * 5];
 float volume_data[VALUE_SIZE];
+float rotate_obj;
 
 //data necessary to give our triangle data to OGL
 GLuint vertexbuffer; 
@@ -350,7 +351,9 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 {
 	if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
-	}
+	} else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+      rotate_obj += 0.3;
+   }
 }
 
 //if the window is resized, capture the new size and reset the viewport
@@ -381,7 +384,11 @@ static void initGeom() {
 }
 
 static float implicitEq(float x, float y, float z) {
-   return pow(x - (LENGTH / 2), 2) + pow(y - (HEIGHT / 2), 2) + pow(z - (DEPTH / 2), 2) - pow(59, 2);
+   x = x - (LENGTH / 2);
+   y = y - (HEIGHT / 2);
+   z = z - (DEPTH / 2);
+   return pow(x, 2) + pow(y, 2) + pow(z, 2) - pow(70, 2);
+   //return z * 4 < cos(2 * M_PI * sqrt(pow(x, 2) + pow(y, 2)));
 }
 
 static void populateVolumeData() {
@@ -411,7 +418,7 @@ static glm::vec3 midpoint(float i1, float j1, float k1, float i2, float j2, floa
 
 // Return 
 static void createTriangles(int i, int j, int k) {
-   float isolevel = 0;
+   float isolevel = 0.5;
    glm::vec3 vertlist[12];
     glm::vec3 normlist[12];
 
@@ -580,17 +587,17 @@ static void createTriangles(int i, int j, int k) {
 
    for (int i=0; triTable[cubeindex][i] != -1; i+=3) {
        // VERTICES
-      triangles.push_back(vertlist[triTable[cubeindex][i]].x / (LENGTH / 2.0));
-      triangles.push_back(vertlist[triTable[cubeindex][i]].y / (HEIGHT / 2.0));
-      triangles.push_back(vertlist[triTable[cubeindex][i]].z / (DEPTH / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i]].x / (LENGTH / 4.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i]].y / (HEIGHT / 4.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i]].z / (DEPTH / 4.0));
 
-      triangles.push_back(vertlist[triTable[cubeindex][i+1]].x / (LENGTH / 2.0));
-      triangles.push_back(vertlist[triTable[cubeindex][i+1]].y / (HEIGHT / 2.0));
-      triangles.push_back(vertlist[triTable[cubeindex][i+1]].z / (DEPTH / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+1]].x / (LENGTH / 4.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+1]].y / (HEIGHT / 4.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+1]].z / (DEPTH / 4.0));
 
-      triangles.push_back(vertlist[triTable[cubeindex][i+2]].x / (LENGTH / 2.0));
-      triangles.push_back(vertlist[triTable[cubeindex][i+2]].y / (HEIGHT / 2.0));
-      triangles.push_back(vertlist[triTable[cubeindex][i+2]].z / (DEPTH / 2.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+2]].x / (LENGTH / 4.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+2]].y / (HEIGHT / 4.0));
+      triangles.push_back(vertlist[triTable[cubeindex][i+2]].z / (DEPTH / 4.0));
 
        // NORMALS
        normals.push_back(normlist[triTable[cubeindex][i]].x);
@@ -627,6 +634,7 @@ static void init()
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	// Enable z-buffer test.
 	glEnable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
 
 	// Initialize the GLSL program.
 	prog = make_shared<Program>();
@@ -647,6 +655,8 @@ static void init()
    drawVolumeData();
    memcpy(g_primitive_buffer_data, triangles.data(), triangles.size() * sizeof(GLfloat));
    memcpy(g_normal_buffer_data, normals.data(), normals.size() * sizeof(GLfloat));
+
+   rotate_obj = 0.0;
 }
 
 static void render()
@@ -674,15 +684,16 @@ static void render()
 
 	// Draw the triangle using GLSL.
 	prog->bind();
-
+   MV->translate(vec3(0, 0, -5));
+   MV->rotate(rotate_obj, vec3(0, 1, 0));
 	//send the matrices to the shaders
 	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(P->topMatrix()));
 	glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, value_ptr(MV->topMatrix()));
-   glUniform3f(prog->getUniform("MatAmb"), 0.0215, 0.1745, 0.0215);
+   glUniform3f(prog->getUniform("MatAmb"), 0.2015, 0.4045, 0.2015);
    glUniform3f(prog->getUniform("MatDif"), 0.07568, 0.61424, 0.07568);
    glUniform3f(prog->getUniform("MatSpec"), 0.633, 0.727811, 0.633);
    glUniform1f(prog->getUniform("shine"), 76.8);
-   glUniform3f(prog->getUniform("lightPos"), 0.5, 0.0, 1.0);
+   glUniform3f(prog->getUniform("lightPos"), 0.5, 0.0, 5.0);
 
 	//we need to set up the vertex array
 	glEnableVertexAttribArray(0);
